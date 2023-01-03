@@ -16,11 +16,12 @@ pub const CLEAR: Color = Color::rgb(0.1, 0.1,0.1);
 
 fn main(){
   App::new()
+    .insert_resource(ClearColor(CLEAR))
     .add_plugins(DefaultPlugins.set(
       WindowPlugin { 
         window: WindowDescriptor{
           title: "Snake rip-off".to_string(),
-          width: 750.0,
+          width: 1000.0,
           height: 800.0,
           resizable: false,
           // scale_factor_override: Some(1.0),
