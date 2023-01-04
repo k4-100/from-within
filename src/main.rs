@@ -21,8 +21,8 @@ fn main(){
       WindowPlugin { 
         window: WindowDescriptor{
           title: "Snake rip-off".to_string(),
-          width: 1000.0,
-          height: 800.0,
+          width: 1400.0,
+          height: 1000.0,
           resizable: false,
           // scale_factor_override: Some(1.0),
           ..default()
