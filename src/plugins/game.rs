@@ -1,6 +1,7 @@
 use bevy::{
-  prelude::*, 
-  input::keyboard::*, time::FixedTimestep
+    prelude::*, 
+    input::keyboard::*, time::FixedTimestep,
+    diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
 };
 // use rand::prelude::*;
 
@@ -19,11 +20,18 @@ impl Plugin for GamePlugin{
   fn build(&self, app: &mut App){
     app
         .add_startup_system(setup)
+        .insert_resource(resources::DebugInfo{ camera_transform: String::new(), fps: 0. })
         .add_system_set(
             SystemSet::new()
                 .with_run_criteria(FixedTimestep::step(0.025))
                 .with_system(camera_movement)
         )
+        .add_system_set(
+            SystemSet::new()
+                .with_run_criteria(FixedTimestep::step(0.025))
+                .with_system(fps_refresh)
+        )
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
     ;
   }
 }
@@ -39,6 +47,7 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    debug_info: Res<resources::DebugInfo>
 ){
     // let my_gltf = asset_server.load("objects/cube1.glb#Scene0");
     // commands.spawn(Camera2dBundle{
@@ -59,8 +68,7 @@ fn setup(
     commands.spawn( (
         components::DebugText,
         TextBundle::from_section(
-            // Accepts a `String` or any type that converts into a `String`, such as `&str`
-            "INFO:",
+            debug_info.get_formatted_debug_info(),
             TextStyle {
                 font: asset_server.load("fonts/Ubuntu-M.ttf"),
                 font_size: 40.0,
@@ -76,7 +84,6 @@ fn setup(
         ..default()
     });
     
-
     
 
     // commands.spawn(PbrBundle {
@@ -99,7 +106,8 @@ fn setup(
 fn camera_movement( 
     mut key_evr: EventReader<KeyboardInput>, 
     mut camera: Query<&mut Transform, With<Camera>>,
-    mut debug_text: Query<&mut Text, With<components::DebugText>>
+    mut debug_text: Query<&mut Text, With<components::DebugText>>,
+    mut debug_info_res: ResMut<resources::DebugInfo>
 ){
     for ev in key_evr.iter(){
         match ev.key_code{
@@ -114,8 +122,8 @@ fn camera_movement(
                     KeyCode::D => { cmr.translation.x += 1.; },
                     KeyCode::Space => { cmr.translation.y += 1.; },
                     KeyCode::C => { cmr.translation.y += -1.; },
-                    KeyCode::Up => { cmr.rotation.x += -0.5; },
-                    KeyCode::Down => { cmr.rotation.x += 0.5; },
+                    // KeyCode::Up => { cmr.rotation.x += -0.5; },
+                    // KeyCode::Down => { cmr.rotation.x += 0.5; },
                     KeyCode::Left => { cmr.rotation.y += -0.5; },
                     KeyCode::Right => { cmr.rotation.y += 0.5; },
                     _ => {}
@@ -130,10 +138,27 @@ fn camera_movement(
                 let debug_info_vec_replaced: Vec<String> = debug_info_vec
                     .into_iter().map( |item: &str| item.replace("),",")\n") ).collect();
                 let debug_text_value = &mut debug_text.single_mut().sections[0].value;
-                *debug_text_value = format!("INFO: \n{}",debug_info_vec_replaced[1]);
+                debug_info_res.camera_transform = format!("INFO: \n{}",debug_info_vec_replaced[1]);
+                *debug_text_value = debug_info_res.get_formatted_debug_info().clone();
             }
             None => println!("none")
         }
     }
 }
+
+fn fps_refresh(
+    mut debug_text: Query<&mut Text, With<components::DebugText>>,
+    diagnostics_res: Res<Diagnostics>,
+    mut debug_info_res: ResMut<resources::DebugInfo>
+){
+    
+    if let Some(fps) = diagnostics_res.get(FrameTimeDiagnosticsPlugin::FPS) {
+        if let Some(raw) = fps.value() {
+            debug_info_res.fps = (raw * 100.).round() / 100.0;
+            let debug_text_value = &mut debug_text.single_mut().sections[0].value;
+            *debug_text_value = debug_info_res.get_formatted_debug_info();
+        }
+    }
+}
+
 // endregion: --- PlayerPlugin systems
