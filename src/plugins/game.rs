@@ -47,15 +47,7 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     debug_info: Res<resources::DebugInfo>
 ){
-    // let my_gltf = asset_server.load("objects/cube1.glb#Scene0");
-    // commands.spawn(Camera2dBundle{
-    //   transform: Transform{
-    //     scale: Vec3{x: 5.0, y: 5.0, z: 1.0},
-    //     ..default()
-    //   },
-    //   ..default()
-    // });
-    //
+
    commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0., 0., 10.0)
             .looking_at( Vec3::new(0.,0.,0.), Vec3::new(0.,1.0,0.))
@@ -75,12 +67,12 @@ fn setup(
         )
     ) );
 
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Box::new(10., 10., 10.) )),
-        material: materials.add(Color::rgb(0., 50., 0.).into()),
-        transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        ..default()
-    });
+    // commands.spawn(PbrBundle {
+    //     mesh: meshes.add(Mesh::from(shape::Box::new(10., 10., 10.) )),
+    //     material: materials.add(Color::rgb(0., 50., 0.).into()),
+    //     transform: Transform::from_xyz(0.0, 0.0, 0.0),
+    //     ..default()
+    // });
     
     
 // commands.spawn(PbrBundle {
@@ -90,13 +82,14 @@ fn setup(
     //     ..default()
     // });
 
+    let my_gltf = asset_server.load("objects/cube1.glb#Scene0");
     // to position our 3d model, simply use the Transform
     // in the SceneBundle
-    // commands.spawn(SceneBundle {
-    //     scene: my_gltf,
-    //     transform: Transform::from_xyz(0.0, 0.0, 1.5),
-    //     ..Default::default()
-    // });
+    commands.spawn(SceneBundle {
+        scene: my_gltf,
+        transform: Transform::from_xyz(0.0, 0.0, 1.5),
+        ..Default::default()
+    });
 
 }
 
@@ -119,10 +112,22 @@ fn camera_movement(
                     KeyCode::D => { cmr.translation.x += 1.; },
                     KeyCode::Space => { cmr.translation.y += 1.; },
                     KeyCode::C => { cmr.translation.y += -1.; },
-                    // KeyCode::Up => { cmr.rotation.x += -0.5; },
-                    // KeyCode::Down => { cmr.rotation.x += 0.5; },
-                    KeyCode::Left => { cmr.rotation.y += -0.5; },
-                    KeyCode::Right => { cmr.rotation.y += 0.5; },
+                    KeyCode::Down => {
+                        let angle =  (-10.0f32).to_radians();
+                        cmr.rotate_x(angle);
+                    },
+                    KeyCode::Up => { 
+                        let angle =  (10.0f32).to_radians();
+                        cmr.rotate_x(angle);
+                    },
+                    KeyCode::Left => { 
+                        let angle =  (10.0f32).to_radians();
+                        cmr.rotate_y(angle);
+                    },
+                    KeyCode::Right => {
+                        let angle =  (-10.0f32).to_radians();
+                        cmr.rotate_y(angle);
+                    },
                     _ => {}
                 }
 
@@ -137,7 +142,7 @@ fn camera_movement(
                 let debug_text_value = &mut debug_text.single_mut().sections[0].value;
                 debug_info_res.camera_transform = format!("INFO: \n{}",debug_info_vec_replaced[1]);
                 *debug_text_value = debug_info_res.get_formatted_debug_info().clone();
-            }
+            },
             None => {}
         }
     }
