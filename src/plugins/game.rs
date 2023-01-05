@@ -36,6 +36,7 @@ impl Plugin for GamePlugin{
 
 fn setup(
     mut commands: Commands, 
+    asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ){
@@ -47,7 +48,7 @@ fn setup(
     //   },
     //   ..default()
     // });
-    
+    //
    commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0., 0., 4.0)
             .looking_at( Vec3::new(0.,0.,0.), Vec3::new(0.,1.0,0.))
@@ -55,12 +56,26 @@ fn setup(
         ..default()
     });
 
+    commands.spawn( (
+        components::DebugText,
+        TextBundle::from_section(
+            // Accepts a `String` or any type that converts into a `String`, such as `&str`
+            "INFO:",
+            TextStyle {
+                font: asset_server.load("fonts/Ubuntu-M.ttf"),
+                font_size: 40.0,
+                color: Color::rgba(0.4, 0.7, 0.2, 1.),
+            }
+        )
+    ) );
+
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(10., 10., 10.) )),
         material: materials.add(Color::rgb(0., 50., 0.).into()),
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
         ..default()
     });
+    
 
     
 
@@ -83,16 +98,14 @@ fn setup(
 
 fn camera_movement( 
     mut key_evr: EventReader<KeyboardInput>, 
-    mut camera: Query<&mut Transform, With<Camera>>
+    mut camera: Query<&mut Transform, With<Camera>>,
+    mut debug_text: Query<&mut Text, With<components::DebugText>>
 ){
-    // println!("{:?}", camera.iter().last());
-    //
-
     for ev in key_evr.iter(){
         match ev.key_code{
             Some(x) => {
-                let mut cmr = &mut camera.single_mut();
-
+                let cmr = &mut camera.single_mut();
+                
                 println!("{:?}", x);
                 match x{
                     KeyCode::W => { cmr.translation.z += -1.; },
@@ -103,12 +116,21 @@ fn camera_movement(
                     KeyCode::C => { cmr.translation.y += -1.; },
                     KeyCode::Up => { cmr.rotation.x += -0.5; },
                     KeyCode::Down => { cmr.rotation.x += 0.5; },
-                    KeyCode::Left => { cmr.translation.y += -1.; },
-                    KeyCode::Right => { cmr.translation.y += -1.; },
+                    KeyCode::Left => { cmr.rotation.y += -0.5; },
+                    KeyCode::Right => { cmr.rotation.y += 0.5; },
                     _ => {}
                 }
-                // camera.single_mut().translation = translation;
-                println!("{:?}", cmr);
+
+                /////////////////////////////////////////////////
+                /// Display debug camera info for camera
+                /////////////////////////////////////////////////
+                let debug_info = format!("{:?}", cmr);
+                let debug_info_vec = debug_info
+                    .split(|c: char| c == '{' || c == '}' );
+                let debug_info_vec_replaced: Vec<String> = debug_info_vec
+                    .into_iter().map( |item: &str| item.replace("),",")\n") ).collect();
+                let debug_text_value = &mut debug_text.single_mut().sections[0].value;
+                *debug_text_value = format!("INFO: \n{}",debug_info_vec_replaced[1]);
             }
             None => println!("none")
         }

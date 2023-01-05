@@ -3,9 +3,12 @@ use bevy::prelude::*;
 
 // region: --- PlayerPlugin Components 
 
+// #[derive(Component)]
+// enum Block{
+//     STATIC
+// }
+//
 #[derive(Component)]
-enum Block{
-    STATIC
-}
+pub struct DebugText;
 
 // endregion: --- PlayerPlugin Components

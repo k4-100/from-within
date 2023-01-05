@@ -16,7 +16,7 @@ pub const CLEAR: Color = Color::rgb(0.1, 0.1,0.1);
 
 fn main(){
   App::new()
-    .insert_resource(ClearColor(CLEAR))
+   .insert_resource(ClearColor(CLEAR))
     .add_plugins(DefaultPlugins.set(
       WindowPlugin { 
         window: WindowDescriptor{
