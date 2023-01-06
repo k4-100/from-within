@@ -1,7 +1,7 @@
 use bevy::{
     prelude::*, 
     input::keyboard::*, time::FixedTimestep,
-    diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin },
 };
 // use rand::prelude::*;
 
@@ -43,8 +43,8 @@ impl Plugin for GamePlugin{
 fn setup(
     mut commands: Commands, 
     asset_server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    // mut meshes: ResMut<Assets<Mesh>>,
+    // materials: ResMut<Assets<StandardMaterial>>,
     debug_info: Res<resources::DebugInfo>
 ){
 
@@ -100,50 +100,47 @@ fn camera_movement(
     mut debug_info_res: ResMut<resources::DebugInfo>
 ){
     for ev in key_evr.iter(){
-        match ev.key_code{
-            Some(x) => {
-                let cmr = &mut camera.single_mut();
-                
-                println!("{:?}", x);
-                match x{
-                    KeyCode::W => { cmr.translation.z += -1.; },
-                    KeyCode::S => { cmr.translation.z +=  1.; },
-                    KeyCode::A => { cmr.translation.x += -1.; },
-                    KeyCode::D => { cmr.translation.x += 1.; },
-                    KeyCode::Space => { cmr.translation.y += 1.; },
-                    KeyCode::C => { cmr.translation.y += -1.; },
-                    KeyCode::Down => {
-                        let angle =  (-10.0f32).to_radians();
-                        cmr.rotate_x(angle);
-                    },
-                    KeyCode::Up => { 
-                        let angle =  (10.0f32).to_radians();
-                        cmr.rotate_x(angle);
-                    },
-                    KeyCode::Left => { 
-                        let angle =  (10.0f32).to_radians();
-                        cmr.rotate_y(angle);
-                    },
-                    KeyCode::Right => {
-                        let angle =  (-10.0f32).to_radians();
-                        cmr.rotate_y(angle);
-                    },
-                    _ => {}
-                }
+        if let Some(x) = ev.key_code{
+            let cmr = &mut camera.single_mut();
+            
+            println!("{:?}", x);
+            match x{
+                KeyCode::W => { cmr.translation.z += -1.; },
+                KeyCode::S => { cmr.translation.z +=  1.; },
+                KeyCode::A => { cmr.translation.x += -1.; },
+                KeyCode::D => { cmr.translation.x += 1.; },
+                KeyCode::Space => { cmr.translation.y += 1.; },
+                KeyCode::C => { cmr.translation.y += -1.; },
+                KeyCode::Down => {
+                    let angle =  (-10.0f32).to_radians();
+                    cmr.rotate_x(angle);
+                },
+                KeyCode::Up => { 
+                    let angle =  (10.0f32).to_radians();
+                    cmr.rotate_x(angle);
+                },
+                KeyCode::Left => { 
+                    let angle =  (10.0f32).to_radians();
+                    cmr.rotate_y(angle);
+                },
+                KeyCode::Right => {
+                    let angle =  (-10.0f32).to_radians();
+                    cmr.rotate_y(angle);
+                },
+                _ => {}
+            }
 
-                /////////////////////////////////////////////////
-                // Display debug camera info for camera
-                /////////////////////////////////////////////////
-                let debug_info = format!("{:?}", cmr);
-                let debug_info_vec = debug_info
-                    .split(|c: char| c == '{' || c == '}' );
-                let debug_info_vec_replaced: Vec<String> = debug_info_vec
-                    .into_iter().map( |item: &str| item.replace("),",")\n") ).collect();
-                let debug_text_value = &mut debug_text.single_mut().sections[0].value;
-                debug_info_res.camera_transform = format!("INFO: \n{}",debug_info_vec_replaced[1]);
-                *debug_text_value = debug_info_res.get_formatted_debug_info().clone();
-            },
-            None => {}
+            /////////////////////////////////////////////////
+            // Display debug camera info for camera
+            /////////////////////////////////////////////////
+            let debug_info = format!("{:?}", cmr);
+            let debug_info_vec = debug_info
+                .split(|c: char| c == '{' || c == '}' );
+            let debug_info_vec_replaced: Vec<String> = debug_info_vec
+                .into_iter().map( |item: &str| item.replace("),",")\n") ).collect();
+            let debug_text_value = &mut debug_text.single_mut().sections[0].value;
+            debug_info_res.camera_transform = format!("INFO: \n{}",debug_info_vec_replaced[1]);
+            *debug_text_value = debug_info_res.get_formatted_debug_info().clone();
         }
     }
 }
