@@ -5,10 +5,13 @@ use bevy::{
 };
 // use rand::prelude::*;
 
+use std::fs;
+
 pub use super::super::utils::{
   components,
   resources
 };
+
 
 
 // region: --- PlayerPlugin itself
@@ -43,18 +46,18 @@ impl Plugin for GamePlugin{
 fn setup(
     mut commands: Commands, 
     asset_server: Res<AssetServer>,
-    // mut meshes: ResMut<Assets<Mesh>>,
-    // materials: ResMut<Assets<StandardMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     debug_info: Res<resources::DebugInfo>
 ){
 
    commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0., 0., 10.0)
-            .looking_at( Vec3::new(0.,0.,0.), Vec3::new(0.,1.0,0.))
+            .looking_at( Vec3::new(0.,0.,0.), Vec3::new(0.0,1.0,0.))
             .with_scale( Vec3{x: 5.0, y: 5.0, z: 1.0}),
         ..default()
     });
-
+    
     commands.spawn( (
         components::DebugText,
         TextBundle::from_section(
@@ -76,20 +79,48 @@ fn setup(
     
     
 // commands.spawn(PbrBundle {
-    //     mesh: meshes.add(Mesh::from(shape::Cube { size: 3.0 })),
-    //     material: materials.add(Color::rgb(0., 0., 100.).into()),
-    //     transform: Transform::from_xyz(0.0, 0.0, 0.0),
-    //     ..default()
-    // });
+//         mesh: meshes.add(Mesh::from(shape::Cube { size: 3.0 })),
+//         material: materials.add(Color::rgb(0., 0., 100.).into()),
+//         transform: Transform::from_xyz(0.0, 0.0, 0.0),
+//         ..default()
+//     });
 
-    let my_gltf = asset_server.load("objects/cube1.glb#Scene0");
-    // to position our 3d model, simply use the Transform
-    // in the SceneBundle
-    commands.spawn(SceneBundle {
-        scene: my_gltf,
-        transform: Transform::from_xyz(0.0, 0.0, 1.5),
-        ..Default::default()
-    });
+
+    let my_map_string: String = fs::read_to_string("assets/map/1.txt")
+        .expect("Should have been able to read the file");
+
+    let my_map_string_vec: Vec<&str> = my_map_string.split_whitespace().collect();
+    // let mut my_map_value_vec: Vec<(char,f64,f64)> = Vec::new();
+    for (x, x_item) in my_map_string_vec.iter().enumerate(){
+        for (y, y_item) in x_item.chars().enumerate(){
+            // my_map_value_vec.push( (y_item, 100. * (y as f64), 100. * (x as f64) ) );
+            match y_item{
+                '#' =>{
+                    commands.spawn(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Cube { size: 3.0 })),
+                        material: materials.add(Color::rgb(0., 0., 100.).into()),
+                        transform: Transform::from_xyz( 3.0 * (y as f32)  , 0.0,  3.0 * (x as f32)),
+                        ..default()
+                    });
+                },
+                'P' =>{
+        
+                }
+                _ =>{}
+            }
+        }
+    }
+
+    // println!("{:#?}", my_map_value_vec);
+
+    // let my_gltf = asset_server.load("objects/cube1.glb#Scene0");
+    // // to position our 3d model, simply use the Transform
+    // // in the SceneBundle
+    // commands.spawn(SceneBundle {
+    //     scene: my_gltf,
+    //     transform: Transform::from_xyz(0.0, 0.0, 1.5),
+    //     ..Default::default()
+    // });
 
 }
 
@@ -102,15 +133,14 @@ fn camera_movement(
     for ev in key_evr.iter(){
         if let Some(x) = ev.key_code{
             let cmr = &mut camera.single_mut();
-            
-            println!("{:?}", x);
+
             match x{
-                KeyCode::W => { cmr.translation.z += -1.; },
-                KeyCode::S => { cmr.translation.z +=  1.; },
-                KeyCode::A => { cmr.translation.x += -1.; },
-                KeyCode::D => { cmr.translation.x += 1.; },
-                KeyCode::Space => { cmr.translation.y += 1.; },
-                KeyCode::C => { cmr.translation.y += -1.; },
+                KeyCode::W => { cmr.translation.z += -0.5; },
+                KeyCode::S => { cmr.translation.z +=  0.5; },
+                KeyCode::A => { cmr.translation.x += -0.5; },
+                KeyCode::D => { cmr.translation.x += 0.5; },
+                KeyCode::Space => { cmr.translation.y += 0.5; },
+                KeyCode::C => { cmr.translation.y += -0.5; },
                 KeyCode::Down => {
                     let angle =  (-10.0f32).to_radians();
                     cmr.rotate_x(angle);
