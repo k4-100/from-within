@@ -64,42 +64,30 @@ fn setup(
         )
     ) );
 
-    // commands.spawn(PbrBundle {
-    //     mesh: meshes.add(Mesh::from(shape::Box::new(10., 10., 10.) )),
-    //     material: materials.add(Color::rgb(0., 50., 0.).into()),
-    //     transform: Transform::from_xyz(0.0, 0.0, 0.0),
-    //     ..default()
-    // });
-    
-    
-// commands.spawn(PbrBundle {
-//         mesh: meshes.add(Mesh::from(shape::Cube { size: 3.0 })),
-//         material: materials.add(Color::rgb(0., 0., 100.).into()),
-//         transform: Transform::from_xyz(0.0, 0.0, 0.0),
-//         ..default()
-//     });
 
 
     let my_map_string: String = fs::read_to_string("assets/map/1.txt")
         .expect("Should have been able to read the file");
+    
+    assert!(my_map_string.contains('P') );
 
     let my_map_string_vec: Vec<&str> = my_map_string.split_whitespace().collect();
     // let mut my_map_value_vec: Vec<(char,f64,f64)> = Vec::new();
-    for (x, x_item) in my_map_string_vec.iter().enumerate(){
-        for (y, y_item) in x_item.chars().enumerate(){
+    for (a, a_item) in my_map_string_vec.iter().enumerate(){
+        for (b, b_item) in a_item.chars().enumerate(){
             // my_map_value_vec.push( (y_item, 100. * (y as f64), 100. * (x as f64) ) );
-            match y_item{
+            match b_item{
                 '#' =>{
                     commands.spawn(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Cube { size: 3.0 })),
                         material: materials.add(Color::rgb(0., 0., 100.).into()),
-                        transform: Transform::from_xyz( 3.0 * (y as f32)  , 0.0,  3.0 * (x as f32)),
+                        transform: Transform::from_xyz( 3.0 * (b as f32)  , 0.0,  3.0 * (a as f32)),
                         ..default()
                     });
                 },
                 'P' =>{
                     commands.spawn(Camera3dBundle {
-                        transform: Transform::from_xyz(3.0 * y as f32, 0., 3.0 * x as f32)
+                        transform: Transform::from_xyz(3.0 * b as f32, 0., 3.0 * a as f32)
                             .looking_at( Vec3::new(0.,0.,0.), Vec3::new(0.0,1.0,0.))
                             .with_scale( Vec3{x: 5.0, y: 5.0, z: 1.0}),
                         ..default()
@@ -110,7 +98,6 @@ fn setup(
         }
     }
 
-    // println!("{:#?}", my_map_value_vec);
 
     // let my_gltf = asset_server.load("objects/cube1.glb#Scene0");
     // // to position our 3d model, simply use the Transform
