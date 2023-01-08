@@ -51,12 +51,6 @@ fn setup(
     debug_info: Res<resources::DebugInfo>
 ){
 
-   commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0., 0., 10.0)
-            .looking_at( Vec3::new(0.,0.,0.), Vec3::new(0.0,1.0,0.))
-            .with_scale( Vec3{x: 5.0, y: 5.0, z: 1.0}),
-        ..default()
-    });
     
     commands.spawn( (
         components::DebugText,
@@ -104,7 +98,12 @@ fn setup(
                     });
                 },
                 'P' =>{
-        
+                    commands.spawn(Camera3dBundle {
+                        transform: Transform::from_xyz(3.0 * y as f32, 0., 3.0 * x as f32)
+                            .looking_at( Vec3::new(0.,0.,0.), Vec3::new(0.0,1.0,0.))
+                            .with_scale( Vec3{x: 5.0, y: 5.0, z: 1.0}),
+                        ..default()
+                    });
                 }
                 _ =>{}
             }
