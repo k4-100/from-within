@@ -113,15 +113,17 @@ fn setup(
 
 fn camera_movement( 
     mut key_evr: EventReader<KeyboardInput>, 
+    keys: Res<Input<KeyCode>>,
+    time: Res<Time>,
     mut camera: Query<&mut Transform, With<Camera>>,
     mut debug_text: Query<&mut Text, With<components::DebugText>>,
     mut debug_info_res: ResMut<resources::DebugInfo>,
     mut motion_evr: EventReader<MouseMotion>
 ){
+    let cmr = &mut camera.single_mut();
 
     // camera rotation 
     for ev in motion_evr.iter() {
-        let cmr = &mut camera.single_mut();
         println!("Mouse moved: X: {} px, Y: {} px", ev.delta.x, ev.delta.y);
         cmr.rotate_local_y( ev.delta.x.to_radians() * (-0.1) );
         // let rotation_x = ev.delta.y.to_radians() * (-0.1);
@@ -131,39 +133,37 @@ fn camera_movement(
         // }
     }
 
+    let mut velocity = Vec3::ZERO;
+    let local_z = cmr.local_z();
+    let forward = -Vec3::new(local_z.x, 0., local_z.z);
+    let right = Vec3::new(local_z.z, 0., -local_z.x);
 
     // camera position 
-    for ev in key_evr.iter(){
-        if let Some(x) = ev.key_code{
-            let cmr = &mut camera.single_mut();
-            let mut velocity = Vec3::ZERO;
-            let local_z = cmr.local_z();
-            let forward = -Vec3::new(local_z.x, 0., local_z.z);
-            let right = Vec3::new(local_z.z, 0., -local_z.x);
+    for key in keys.get_pressed(){
 
-            match x{
-                KeyCode::W => velocity += forward,
-                KeyCode::S => velocity -= forward,
-                KeyCode::A => velocity -= right,
-                KeyCode::D => velocity += right,
-                _ => {}
-            }
-            velocity.normalize_or_zero();
-            cmr.translation += velocity;
-
-
-            /////////////////////////////////////////////////
-            // Display debug camera info for camera
-            /////////////////////////////////////////////////
-            let debug_info = format!("{:?}", cmr);
-            let debug_info_vec = debug_info
-                .split(|c: char| c == '{' || c == '}' );
-            let debug_info_vec_replaced: Vec<String> = debug_info_vec
-                .into_iter().map( |item: &str| item.replace("),",")\n") ).collect();
-            let debug_text_value = &mut debug_text.single_mut().sections[0].value;
-            debug_info_res.camera_transform = format!("INFO: \n{}",debug_info_vec_replaced[1]);
-            *debug_text_value = debug_info_res.get_formatted_debug_info().clone();
+        match key{
+            KeyCode::W => velocity += forward,
+            KeyCode::S => velocity -= forward,
+            KeyCode::A => velocity -= right,
+            KeyCode::D => velocity += right,
+            _ => {}
         }
+
+        velocity.normalize_or_zero();
+        cmr.translation += velocity * time.delta_seconds();
+
+
+        /////////////////////////////////////////////////
+        // Display debug camera info for camera
+        /////////////////////////////////////////////////
+        let debug_info = format!("{:?}", cmr);
+        let debug_info_vec = debug_info
+            .split(|c: char| c == '{' || c == '}' );
+        let debug_info_vec_replaced: Vec<String> = debug_info_vec
+            .into_iter().map( |item: &str| item.replace("),",")\n") ).collect();
+        let debug_text_value = &mut debug_text.single_mut().sections[0].value;
+        debug_info_res.camera_transform = format!("INFO: \n{}",debug_info_vec_replaced[1]);
+        *debug_text_value = debug_info_res.get_formatted_debug_info().clone();
     }
 }
 
