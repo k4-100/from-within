@@ -88,8 +88,8 @@ fn setup(
                 },
                 'P' =>{
                     commands.spawn(Camera3dBundle {
-                        transform: Transform::from_xyz(3.0 * b as f32, 0., 3.0 * a as f32)
-                            .looking_at( Vec3::new(0.,0.,0.), Vec3::new(0.0,1.0,0.))
+                        transform: Transform::from_xyz(3.0 * b as f32, 0., 3.0 * a as f32 + 1.5)
+                            // .looking_at( Vec3::new(0.,0.,0.), Vec3::new(0.0,1.0,0.))
                             .with_scale( Vec3{x: 5.0, y: 5.0, z: 1.0}),
                         ..default()
                     });
@@ -123,9 +123,12 @@ fn camera_movement(
     for ev in motion_evr.iter() {
         let cmr = &mut camera.single_mut();
         println!("Mouse moved: X: {} px, Y: {} px", ev.delta.x, ev.delta.y);
-        cmr.rotate_y( ev.delta.x.to_radians() * (-0.1) );
-        // cmr.rotate_x( ev.delta.y.to_radians() * (-0.1) );
-        // cmr.rotate_y( ev.delta.x.to_radians() );
+        cmr.rotate_local_y( ev.delta.x.to_radians() * (-0.1) );
+        // let rotation_x = ev.delta.y.to_radians() * (-0.1);
+        // if (cmr.rotation.x.to_radians() <= (45.0 as f32).to_radians() && rotation_x.to_radians() > (0.0 as f32).to_radians() ) 
+        // || (cmr.rotation.x.to_radians() >= (-45.0 as f32).to_radians() && rotation_x.to_radians() < (0.0 as f32).to_radians() ) {
+        //     cmr.rotate_local_x( rotation_x );
+        // }
     }
 
 
@@ -133,32 +136,21 @@ fn camera_movement(
     for ev in key_evr.iter(){
         if let Some(x) = ev.key_code{
             let cmr = &mut camera.single_mut();
+            let mut velocity = Vec3::ZERO;
+            let local_z = cmr.local_z();
+            let forward = -Vec3::new(local_z.x, 0., local_z.z);
+            let right = Vec3::new(local_z.z, 0., -local_z.x);
 
             match x{
-                KeyCode::W => { cmr.translation.z += -0.5; },
-                KeyCode::S => { cmr.translation.z +=  0.5; },
-                KeyCode::A => { cmr.translation.x += -0.5; },
-                KeyCode::D => { cmr.translation.x += 0.5; },
-                KeyCode::Space => { cmr.translation.y += 0.5; },
-                KeyCode::C => { cmr.translation.y += -0.5; },
-                // KeyCode::Down => {
-                //     let angle =  (-10.0f32).to_radians();
-                //     cmr.rotate_x(angle);
-                // },
-                // KeyCode::Up => { 
-                //     let angle =  (10.0f32).to_radians();
-                //     cmr.rotate_x(angle);
-                // },
-                // KeyCode::Left => { 
-                //     let angle =  (10.0f32).to_radians();
-                //     cmr.rotate_y(angle);
-                // },
-                // KeyCode::Right => {
-                //     let angle =  (-10.0f32).to_radians();
-                //     cmr.rotate_y(angle);
-                // },
+                KeyCode::W => velocity += forward,
+                KeyCode::S => velocity -= forward,
+                KeyCode::A => velocity -= right,
+                KeyCode::D => velocity += right,
                 _ => {}
             }
+            velocity.normalize_or_zero();
+            cmr.translation += velocity;
+
 
             /////////////////////////////////////////////////
             // Display debug camera info for camera
