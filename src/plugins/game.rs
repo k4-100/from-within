@@ -1,7 +1,8 @@
 use bevy::{
     prelude::*, 
-    input::keyboard::*, time::FixedTimestep,
+    input::{keyboard::*, mouse::MouseMotion}, time::FixedTimestep,
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin },
+
 };
 // use rand::prelude::*;
 
@@ -114,8 +115,21 @@ fn camera_movement(
     mut key_evr: EventReader<KeyboardInput>, 
     mut camera: Query<&mut Transform, With<Camera>>,
     mut debug_text: Query<&mut Text, With<components::DebugText>>,
-    mut debug_info_res: ResMut<resources::DebugInfo>
+    mut debug_info_res: ResMut<resources::DebugInfo>,
+    mut motion_evr: EventReader<MouseMotion>
 ){
+
+    // camera rotation 
+    for ev in motion_evr.iter() {
+        let cmr = &mut camera.single_mut();
+        println!("Mouse moved: X: {} px, Y: {} px", ev.delta.x, ev.delta.y);
+        cmr.rotate_y( ev.delta.x.to_radians() * (-0.1) );
+        // cmr.rotate_x( ev.delta.y.to_radians() * (-0.1) );
+        // cmr.rotate_y( ev.delta.x.to_radians() );
+    }
+
+
+    // camera position 
     for ev in key_evr.iter(){
         if let Some(x) = ev.key_code{
             let cmr = &mut camera.single_mut();
@@ -127,22 +141,22 @@ fn camera_movement(
                 KeyCode::D => { cmr.translation.x += 0.5; },
                 KeyCode::Space => { cmr.translation.y += 0.5; },
                 KeyCode::C => { cmr.translation.y += -0.5; },
-                KeyCode::Down => {
-                    let angle =  (-10.0f32).to_radians();
-                    cmr.rotate_x(angle);
-                },
-                KeyCode::Up => { 
-                    let angle =  (10.0f32).to_radians();
-                    cmr.rotate_x(angle);
-                },
-                KeyCode::Left => { 
-                    let angle =  (10.0f32).to_radians();
-                    cmr.rotate_y(angle);
-                },
-                KeyCode::Right => {
-                    let angle =  (-10.0f32).to_radians();
-                    cmr.rotate_y(angle);
-                },
+                // KeyCode::Down => {
+                //     let angle =  (-10.0f32).to_radians();
+                //     cmr.rotate_x(angle);
+                // },
+                // KeyCode::Up => { 
+                //     let angle =  (10.0f32).to_radians();
+                //     cmr.rotate_x(angle);
+                // },
+                // KeyCode::Left => { 
+                //     let angle =  (10.0f32).to_radians();
+                //     cmr.rotate_y(angle);
+                // },
+                // KeyCode::Right => {
+                //     let angle =  (-10.0f32).to_radians();
+                //     cmr.rotate_y(angle);
+                // },
                 _ => {}
             }
 
