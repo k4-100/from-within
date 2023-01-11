@@ -23,11 +23,8 @@ impl Plugin for GamePlugin{
     app
         .add_startup_system(setup)
         .insert_resource(resources::DebugInfo{ camera_transform: String::new(), fps: 0. })
-        .add_system_set(
-            SystemSet::new()
-                .with_run_criteria(FixedTimestep::step(0.025))
-                .with_system(camera_movement)
-        )
+        .add_system(camera_mouse_movement)
+        .add_system(camera_keyboard_movement)
         .add_system_set(
             SystemSet::new()
                 .with_run_criteria(FixedTimestep::step(0.025))
@@ -111,9 +108,7 @@ fn setup(
 
 }
 
-fn camera_movement( 
-    mut key_evr: EventReader<KeyboardInput>, 
-    keys: Res<Input<KeyCode>>,
+fn camera_mouse_movement( 
     time: Res<Time>,
     mut camera: Query<&mut Transform, With<Camera>>,
     mut debug_text: Query<&mut Text, With<components::DebugText>>,
@@ -124,34 +119,10 @@ fn camera_movement(
 
     // camera rotation 
     for ev in motion_evr.iter() {
-        println!("Mouse moved: X: {} px, Y: {} px", ev.delta.x, ev.delta.y);
+        // println!("Mouse moved: X: {} px, Y: {} px", ev.delta.x, ev.delta.y);
         cmr.rotate_local_y( ev.delta.x.to_radians() * (-0.1) );
-        // let rotation_x = ev.delta.y.to_radians() * (-0.1);
-        // if (cmr.rotation.x.to_radians() <= (45.0 as f32).to_radians() && rotation_x.to_radians() > (0.0 as f32).to_radians() ) 
-        // || (cmr.rotation.x.to_radians() >= (-45.0 as f32).to_radians() && rotation_x.to_radians() < (0.0 as f32).to_radians() ) {
-        //     cmr.rotate_local_x( rotation_x );
-        // }
+        println!("MM");
     }
-
-    let mut velocity = Vec3::ZERO;
-    let local_z = cmr.local_z();
-    let forward = -Vec3::new(local_z.x, 0., local_z.z);
-    let right = Vec3::new(local_z.z, 0., -local_z.x);
-
-    // camera position 
-    for key in keys.get_pressed(){
-
-        match key{
-            KeyCode::W => velocity += forward,
-            KeyCode::S => velocity -= forward,
-            KeyCode::A => velocity -= right,
-            KeyCode::D => velocity += right,
-            _ => {}
-        }
-
-        velocity.normalize_or_zero();
-        cmr.translation += velocity * time.delta_seconds();
-
 
         /////////////////////////////////////////////////
         // Display debug camera info for camera
@@ -164,8 +135,37 @@ fn camera_movement(
         let debug_text_value = &mut debug_text.single_mut().sections[0].value;
         debug_info_res.camera_transform = format!("INFO: \n{}",debug_info_vec_replaced[1]);
         *debug_text_value = debug_info_res.get_formatted_debug_info().clone();
+    
+}
+
+fn  camera_keyboard_movement(
+    keys: Res<Input<KeyCode>>,
+    time: Res<Time>,
+    mut camera: Query<&mut Transform, With<Camera>>,
+){
+
+    let cmr = &mut camera.single_mut();
+    let mut velocity = Vec3::ZERO;
+    let local_z = cmr.local_z();
+    let forward = -Vec3::new(local_z.x, 0., local_z.z);
+    let right = Vec3::new(local_z.z, 0., -local_z.x);
+
+    // camera position 
+    for key in keys.get_pressed(){
+        match key{
+            KeyCode::W => velocity += forward,
+            KeyCode::S => velocity -= forward,
+            KeyCode::A => velocity -= right,
+            KeyCode::D => velocity += right,
+            _ => {}
+        }
+
+        velocity.normalize_or_zero();
+        cmr.translation += velocity * time.delta_seconds() * 2.0;
+        println!("MK");
     }
 }
+
 
 fn fps_refresh(
     mut debug_text: Query<&mut Text, With<components::DebugText>>,
