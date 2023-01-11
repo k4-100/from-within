@@ -1,6 +1,6 @@
 use bevy::{
     prelude::*, 
-    input::{keyboard::*, mouse::MouseMotion}, time::FixedTimestep,
+    input::{mouse::MouseMotion},
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin },
 
 };
@@ -21,15 +21,11 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin{
   fn build(&self, app: &mut App){
     app
-        .add_startup_system(setup)
+        .add_startup_system(setup )
         .insert_resource(resources::DebugInfo{ camera_transform: String::new(), fps: 0. })
         .add_system(camera_mouse_movement)
         .add_system(camera_keyboard_movement)
-        .add_system_set(
-            SystemSet::new()
-                .with_run_criteria(FixedTimestep::step(0.025))
-                .with_system(fps_refresh)
-        )
+        .add_system(debug_refresh)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
     ;
   }
@@ -108,34 +104,18 @@ fn setup(
 
 }
 
+
+
 fn camera_mouse_movement( 
-    time: Res<Time>,
     mut camera: Query<&mut Transform, With<Camera>>,
-    mut debug_text: Query<&mut Text, With<components::DebugText>>,
-    mut debug_info_res: ResMut<resources::DebugInfo>,
     mut motion_evr: EventReader<MouseMotion>
 ){
     let cmr = &mut camera.single_mut();
 
     // camera rotation 
     for ev in motion_evr.iter() {
-        // println!("Mouse moved: X: {} px, Y: {} px", ev.delta.x, ev.delta.y);
         cmr.rotate_local_y( ev.delta.x.to_radians() * (-0.1) );
-        println!("MM");
     }
-
-        /////////////////////////////////////////////////
-        // Display debug camera info for camera
-        /////////////////////////////////////////////////
-        let debug_info = format!("{:?}", cmr);
-        let debug_info_vec = debug_info
-            .split(|c: char| c == '{' || c == '}' );
-        let debug_info_vec_replaced: Vec<String> = debug_info_vec
-            .into_iter().map( |item: &str| item.replace("),",")\n") ).collect();
-        let debug_text_value = &mut debug_text.single_mut().sections[0].value;
-        debug_info_res.camera_transform = format!("INFO: \n{}",debug_info_vec_replaced[1]);
-        *debug_text_value = debug_info_res.get_formatted_debug_info().clone();
-    
 }
 
 fn  camera_keyboard_movement(
@@ -159,24 +139,31 @@ fn  camera_keyboard_movement(
             KeyCode::D => velocity += right,
             _ => {}
         }
-
-        velocity.normalize_or_zero();
-        cmr.translation += velocity * time.delta_seconds() * 2.0;
-        println!("MK");
+        cmr.translation += velocity.normalize_or_zero() * time.delta_seconds() * 2.0;
     }
 }
 
 
-fn fps_refresh(
+fn debug_refresh(
     mut debug_text: Query<&mut Text, With<components::DebugText>>,
     diagnostics_res: Res<Diagnostics>,
-    mut debug_info_res: ResMut<resources::DebugInfo>
+    mut debug_info_res: ResMut<resources::DebugInfo>,
+    mut camera: Query<&mut Transform, With<Camera>>,
 ){
     
     if let Some(fps) = diagnostics_res.get(FrameTimeDiagnosticsPlugin::FPS) {
         if let Some(raw) = fps.value() {
             debug_info_res.fps = (raw * 100.).round() / 100.0;
             let debug_text_value = &mut debug_text.single_mut().sections[0].value;
+            *debug_text_value = debug_info_res.get_formatted_debug_info();
+            let cmr = &mut camera.single_mut();
+            let debug_info = format!("{:?}", cmr);
+            let debug_info_vec = debug_info
+                .split(|c: char| c == '{' || c == '}' );
+            let debug_info_vec_replaced: Vec<String> = debug_info_vec
+                .into_iter().map( |item: &str| item.replace("),",")\n") ).collect();
+            let debug_text_value = &mut debug_text.single_mut().sections[0].value;
+            debug_info_res.camera_transform = debug_info_vec_replaced[1].clone();
             *debug_text_value = debug_info_res.get_formatted_debug_info();
         }
     }
